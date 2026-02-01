@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="KnowYourFood - AI-powered Indian food nutrition analyzer based on ICMR guidelines. Analyze cooked dishes and packaged foods.">
+    <title>KnowYourFood - Indian Food Nutrition Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Animated Background -->
+        <div class="bg-gradient"></div>
+        <div class="floating-elements">
+            <span class="float-icon">🍛</span>
+            <span class="float-icon">🥗</span>
+            <span class="float-icon">🍲</span>
+            <span class="float-icon">🥭</span>
+            <span class="float-icon">🌶️</span>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">🍽️</span>
+                <h1>KnowYour<span class="accent">Food</span></h1>
+            </div>
+            <p class="tagline">AI-Powered Indian Food Analysis • ICMR Guidelines</p>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📸</div>
+                        <h2>Upload Food Photo</h2>
+                        <p>Drag & drop or click to upload</p>
+                        <p class="upload-hint">Supports: Cooked dishes, packaged foods, nutrition labels</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
+                    </div>
+                    <div class="image-preview" id="imagePreview" hidden>
+                        <img id="previewImg" src="" alt="Food preview">
+                        <button class="remove-btn" id="removeBtn">✕</button>
+                    </div>
+                </div>
+
+                <!-- Quick Search -->
+                <div class="quick-search">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="foodSearch"
+                            placeholder="Or type food name (e.g., Butter Chicken, Boost drink, Lassi)">
+                        <button class="analyze-btn" id="analyzeBtn">Analyze</button>
+                    </div>
+                </div>
+
+                <!-- Sample Foods -->
+                <div class="sample-foods">
+                    <p class="sample-label">Try these examples:</p>
+                    <div class="sample-chips">
+                        <button class="chip" data-food="Butter Chicken">🍗 Butter Chicken</button>
+                        <button class="chip" data-food="Boost Health Drink">🥤 Boost Drink</button>
+                        <button class="chip" data-food="Masala Dosa">🥞 Masala Dosa</button>
+                        <button class="chip" data-food="Sweet Lassi">🥛 Sweet Lassi</button>
+                        <button class="chip" data-food="Maggi Noodles">🍜 Maggi Noodles</button>
+                        <button class="chip" data-food="Gulab Jamun">🍩 Gulab Jamun</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading State -->
+            <section class="loading-section" id="loadingSection" hidden>
+                <div class="loading-card">
+                    <div class="loader">
+                        <div class="food-spinner">🍛</div>
+                    </div>
+                    <h3>Analyzing your food...</h3>
+                    <p class="loading-text">Checking ICMR guidelines</p>
+                </div>
+            </section>
+
+            <!-- Not Food Error Section -->
+            <section class="not-food-section" id="notFoodSection" hidden>
+                <div class="not-food-card">
+                    <div class="not-food-icon" id="notFoodIcon">🤔</div>
+                    <h2 id="notFoodTitle">Hmm, that's not food!</h2>
+                    <p class="not-food-message" id="notFoodMessage">
+                        Unless you're a goat, I don't think you should be eating that!
+                    </p>
+                    <div class="not-food-suggestion">
+                        <p>Try uploading something delicious like:</p>
+                        <div class="food-suggestions">
+                            <span>🍛 Biryani</span>
+                            <span>🥘 Dal Makhani</span>
+                            <span>🍗 Butter Chicken</span>
+                        </div>
+                    </div>
+                    <button class="try-again-btn" id="tryAgainBtn">
+                        🍽️ Let me try again
+                    </button>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection" hidden>
+                <div class="results-header">
+                    <button class="back-btn" id="backBtn">← Analyze Another</button>
+                    <h2 id="foodName">Food Name</h2>
+                </div>
+
+                <!-- Food Summary Card -->
+                <div class="summary-card" id="summaryCard">
+                    <div class="summary-header">
+                        <span class="summary-icon">📊</span>
+                        <h3>Summary</h3>
+                    </div>
+                    <p id="foodSummary">Loading summary...</p>
+                    <div class="nutrition-quick" id="nutritionQuick"></div>
+                </div>
+
+                <!-- Analysis Tabs -->
+                <div class="analysis-tabs">
+                    <button class="tab active" data-tab="good">✅ Good</button>
+                    <button class="tab" data-tab="bad">⚠️ Bad</button>
+                    <button class="tab" data-tab="warnings">🚨 Warnings</button>
+                    <button class="tab" data-tab="alternatives">🥗 Alternatives</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <div class="tab-pane active" id="good">
+                        <ul class="analysis-list good-list"></ul>
+                    </div>
+                    <div class="tab-pane" id="bad">
+                        <ul class="analysis-list bad-list"></ul>
+                    </div>
+                    <div class="tab-pane" id="warnings">
+                        <ul class="analysis-list warnings-list"></ul>
+                    </div>
+                    <div class="tab-pane" id="alternatives">
+                        <ul class="analysis-list alternatives-list"></ul>
+                    </div>
+                </div>
+
+                <!-- Consumption Tips -->
+                <div class="tips-card" id="tipsCard">
+                    <div class="tips-header">
+                        <span class="tips-icon">💡</span>
+                        <h3>Ways to Consume</h3>
+                    </div>
+                    <ul id="consumptionTips"></ul>
+                </div>
+
+                <!-- ICMR Reference -->
+                <div class="icmr-badge">
+                    <span>📋</span>
+                    <p>Analysis based on <strong>ICMR-NIN 2024</strong> Dietary Guidelines for Indians</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🇮🇳 Made for Indian Food Lovers</p>
+            <p class="disclaimer">Nutritional analysis is for informational purposes. Consult a dietitian for
+                personalized advice.</p>
+        </footer>
+    </div>
+
+    <script src="icmr-data.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
