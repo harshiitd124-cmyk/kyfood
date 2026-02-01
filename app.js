@@ -164,6 +164,7 @@ async function handleAnalyze() {
 
     if (!searchTerm && !uploadedFile) {
         shakeElement(foodSearch.parentElement);
+        shakeElement(uploadArea);
         return;
     }
 

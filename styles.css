@@ -168,7 +168,7 @@ body {
 
 .logo-icon {
     font-size: 2.5rem;
-    animation: pulse 2s infinite;
+    /* Animation removed for cleaner UI */
 }
 
 @keyframes pulse {
@@ -251,7 +251,7 @@ body {
 .upload-icon {
     font-size: 3.5rem;
     margin-bottom: 1rem;
-    animation: bounce 2s infinite;
+    /* Animation removed for cleaner UI */
 }
 
 @keyframes bounce {
@@ -322,8 +322,14 @@ body {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
     padding: 1rem;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.search-label {
+    margin-bottom: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
 }
 
 .search-box {
@@ -355,22 +361,40 @@ body {
     color: var(--text-muted);
 }
 
+/* Action Area */
+.action-area {
+    display: flex;
+    justify-content: center;
+    margin: 1.5rem 0 2rem;
+}
+
 .analyze-btn {
     background: var(--gradient-primary);
     color: white;
     border: none;
-    padding: 0.6rem 1.25rem;
-    border-radius: var(--radius-sm);
-    font-weight: 600;
-    font-size: 0.9rem;
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: var(--shadow-button);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .analyze-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+}
+
+.analyze-btn:active {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+}
+
+.btn-icon {
+    font-size: 1.2rem;
 }
 
 /* Sample Foods */
