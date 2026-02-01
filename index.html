@@ -37,41 +37,42 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Upload Section -->
-            <section class="upload-section" id="uploadSection">
-                <div class="upload-card">
-                    <div class="upload-area" id="uploadArea">
-                        <div class="upload-icon">📸</div>
-                        <h2>Upload Food Photo</h2>
-                        <p>Drag & drop or click to upload</p>
-                        <p class="upload-hint">Supports: Cooked dishes, packaged foods, nutrition labels</p>
-                        <input type="file" id="fileInput" accept="image/*" hidden>
+            <!-- Main Input Section -->
+            <section class="c-section" id="uploadSection">
+                <div class="omnibox-container">
+                    <div class="omnibox-wrapper">
+                        <div class="omnibox">
+                            <button class="camera-btn" id="cameraBtn" title="Upload Photo" aria-label="Upload Photo">
+                                <span class="camera-icon">📷</span>
+                            </button>
+                            <input type="text" id="foodSearch"
+                                placeholder="Type food name or click camera to upload...">
+                            <input type="file" id="fileInput" accept="image/*" hidden>
+                        </div>
                     </div>
-                    <div class="image-preview" id="imagePreview" hidden>
-                        <img id="previewImg" src="" alt="Food preview">
-                        <button class="remove-btn" id="removeBtn">✕</button>
-                    </div>
-                </div>
 
-                <!-- Quick Search -->
-                <div class="quick-search">
-                    <p class="search-label">Or search by name:</p>
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" id="foodSearch" placeholder="e.g. Butter Chicken, Boost, Lassi">
+                    <!-- Image Preview (Appears below omnibox) -->
+                    <div class="mini-preview" id="imagePreview" hidden>
+                        <div class="preview-card">
+                            <img id="previewImg" src="" alt="Food preview">
+                            <div class="preview-info">
+                                <span class="file-name" id="fileName">image.jpg</span>
+                                <button class="remove-btn-mini" id="removeBtn">Remove</button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Main Action Button -->
-                <div class="action-area">
-                    <button class="analyze-btn" id="analyzeBtn">
-                        <span class="btn-icon">✨</span> Analyze Food
-                    </button>
+                    <!-- Main Action Button -->
+                    <div class="action-area">
+                        <button class="analyze-btn" id="analyzeBtn">
+                            <span class="btn-icon">✨</span> Analyze Food
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Sample Foods -->
                 <div class="sample-foods">
-                    <p class="sample-label">Try these examples:</p>
+                    <p class="sample-label">Or try these examples:</p>
                     <div class="sample-chips">
                         <button class="chip" data-food="Butter Chicken">🍗 Butter Chicken</button>
                         <button class="chip" data-food="Boost Health Drink">🥤 Boost Drink</button>

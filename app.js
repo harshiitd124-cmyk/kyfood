@@ -3,10 +3,12 @@
    ======================================== */
 
 // DOM Elements
-const uploadArea = document.getElementById('uploadArea');
+// DOM Elements
+const cameraBtn = document.getElementById('cameraBtn');
 const fileInput = document.getElementById('fileInput');
 const imagePreview = document.getElementById('imagePreview');
 const previewImg = document.getElementById('previewImg');
+const fileName = document.getElementById('fileName');
 const removeBtn = document.getElementById('removeBtn');
 const foodSearch = document.getElementById('foodSearch');
 const analyzeBtn = document.getElementById('analyzeBtn');
@@ -28,16 +30,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Setup Event Listeners
 function setupEventListeners() {
-    // Upload area click
-    uploadArea.addEventListener('click', () => fileInput.click());
+    // Camera button click
+    cameraBtn.addEventListener('click', () => fileInput.click());
 
     // File input change
     fileInput.addEventListener('change', handleFileSelect);
 
-    // Drag and drop
-    uploadArea.addEventListener('dragover', handleDragOver);
-    uploadArea.addEventListener('dragleave', handleDragLeave);
-    uploadArea.addEventListener('drop', handleDrop);
+    // Removed Drag and drop listener since big area is gone
+    // We kept the functionality minimal for now
 
     // Remove image
     removeBtn.addEventListener('click', removeImage);
@@ -72,37 +72,24 @@ function setupEventListeners() {
 }
 
 // File Handling
+// File Handling (Simplified)
 function handleFileSelect(e) {
     const file = e.target.files[0];
     if (file) processFile(file);
 }
 
-function handleDragOver(e) {
-    e.preventDefault();
-    uploadArea.classList.add('dragover');
-}
-
-function handleDragLeave(e) {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-}
-
-function handleDrop(e) {
-    e.preventDefault();
-    uploadArea.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-        processFile(file);
-    }
-}
+// Removed drag handlers for now as UI changed to omnibox
 
 function processFile(file) {
     uploadedFile = file;
     const reader = new FileReader();
     reader.onload = (e) => {
         previewImg.src = e.target.result;
-        uploadArea.hidden = true;
+        fileName.textContent = file.name;
         imagePreview.hidden = false;
+
+        // Auto-focus analyze button or show feedback
+        analyzeBtn.focus();
     };
     reader.readAsDataURL(file);
 }
@@ -110,8 +97,8 @@ function processFile(file) {
 function removeImage() {
     uploadedFile = null;
     fileInput.value = '';
-    uploadArea.hidden = false;
     imagePreview.hidden = true;
+    previewImg.src = '';
 }
 
 // Quirky "Not Food" Messages
@@ -163,8 +150,7 @@ async function handleAnalyze() {
     const searchTerm = foodSearch.value.trim();
 
     if (!searchTerm && !uploadedFile) {
-        shakeElement(foodSearch.parentElement);
-        shakeElement(uploadArea);
+        shakeElement(document.querySelector('.omnibox-wrapper'));
         return;
     }
 

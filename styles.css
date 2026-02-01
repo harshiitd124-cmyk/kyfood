@@ -361,6 +361,130 @@ body {
     color: var(--text-muted);
 }
 
+/* Omnibox Styles */
+.omnibox-container {
+    margin-bottom: 2rem;
+}
+
+.omnibox-wrapper {
+    background: var(--bg-card);
+    padding: 0.5rem;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: var(--shadow-card);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(20px);
+}
+
+.omnibox-wrapper:hover,
+.omnibox-wrapper:focus-within {
+    border-color: var(--saffron);
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+    transform: translateY(-2px);
+}
+
+.omnibox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem;
+}
+
+.camera-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg-glass);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.camera-btn:hover {
+    background: rgba(255, 107, 53, 0.2);
+    transform: scale(1.1);
+}
+
+.camera-icon {
+    font-size: 1.4rem;
+}
+
+#foodSearch {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+}
+
+#foodSearch::placeholder {
+    color: var(--text-muted);
+}
+
+/* Mini Preview */
+.mini-preview {
+    margin: 1rem 0;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+    animation: fadeIn 0.3s ease;
+}
+
+.preview-card {
+    background: var(--bg-glass);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.preview-card img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.preview-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.file-name {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.remove-btn-mini {
+    background: none;
+    border: none;
+    color: var(--spice-red);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-align: left;
+    padding: 0;
+}
+
+.remove-btn-mini:hover {
+    text-decoration: underline;
+}
+
 /* Action Area */
 .action-area {
     display: flex;
