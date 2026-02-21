@@ -82,12 +82,34 @@ function processFile(file) {
     uploadedFile = file;
     const reader = new FileReader();
     reader.onload = (e) => {
-        previewImg.src = e.target.result;
-        imagePreview.hidden = false;
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_SIZE = 800; // Resize to max 800px
 
-        // Enable analyze button
-        analyzeBtn.disabled = false;
-        analyzeBtn.focus();
+            if (width > height && width > MAX_SIZE) {
+                height *= MAX_SIZE / width;
+                width = MAX_SIZE;
+            } else if (height > MAX_SIZE) {
+                width *= MAX_SIZE / height;
+                height = MAX_SIZE;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compress to JPEG with 80% quality
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            previewImg.src = compressedBase64;
+            imagePreview.hidden = false;
+            analyzeBtn.disabled = false;
+            analyzeBtn.focus();
+        };
+        img.src = e.target.result;
     };
     reader.readAsDataURL(file);
 }
@@ -203,10 +225,9 @@ Otherwise, return the output STRICTLY as a JSON object with the following struct
             });
         }
 
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const response = await fetch("/api/analyze", {
             method: "POST",
             headers: {
-                "Authorization": "Bearer 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",
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
