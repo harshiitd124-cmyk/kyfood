@@ -4,13 +4,12 @@
 
 // DOM Elements
 // DOM Elements
-const cameraBtn = document.getElementById('cameraBtn');
+const uploadArea = document.getElementById('uploadArea');
 const fileInput = document.getElementById('fileInput');
 const imagePreview = document.getElementById('imagePreview');
 const previewImg = document.getElementById('previewImg');
 const fileName = document.getElementById('fileName');
 const removeBtn = document.getElementById('removeBtn');
-const foodSearch = document.getElementById('foodSearch');
 const analyzeBtn = document.getElementById('analyzeBtn');
 const uploadSection = document.getElementById('uploadSection');
 const loadingSection = document.getElementById('loadingSection');
@@ -25,19 +24,34 @@ let uploadedFile = null;
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-    animateFloatingIcons();
 });
 
 // Setup Event Listeners
 function setupEventListeners() {
-    // Camera button click
-    cameraBtn.addEventListener('click', () => fileInput.click());
+    // Click to upload
+    uploadArea.addEventListener('click', () => fileInput.click());
 
     // File input change
     fileInput.addEventListener('change', handleFileSelect);
 
-    // Removed Drag and drop listener since big area is gone
-    // We kept the functionality minimal for now
+    // Drag and drop for the main upload area
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect({ target: fileInput });
+        }
+    });
 
     // Remove image
     removeBtn.addEventListener('click', removeImage);
@@ -45,30 +59,14 @@ function setupEventListeners() {
     // Analyze button
     analyzeBtn.addEventListener('click', handleAnalyze);
 
-    // Search input enter key
-    foodSearch.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleAnalyze();
-    });
-
-    // Sample chips
-    document.querySelectorAll('.chip').forEach(chip => {
-        chip.addEventListener('click', () => {
-            const food = chip.dataset.food;
-            foodSearch.value = food;
-            handleAnalyze();
-        });
-    });
+    // Remove search input and old tabs handlers since they are removed from HTML.
+    // Sample chips are also removed.
 
     // Back button
     backBtn.addEventListener('click', showUploadSection);
 
     // Try again button (from not-food section)
     tryAgainBtn.addEventListener('click', showUploadSection);
-
-    // Tab switching
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
-    });
 }
 
 // File Handling
@@ -85,10 +83,10 @@ function processFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
         previewImg.src = e.target.result;
-        fileName.textContent = file.name;
         imagePreview.hidden = false;
 
-        // Auto-focus analyze button or show feedback
+        // Enable analyze button
+        analyzeBtn.disabled = false;
         analyzeBtn.focus();
     };
     reader.readAsDataURL(file);
@@ -99,6 +97,7 @@ function removeImage() {
     fileInput.value = '';
     imagePreview.hidden = true;
     previewImg.src = '';
+    analyzeBtn.disabled = true;
 }
 
 // Quirky "Not Food" Messages
@@ -147,31 +146,102 @@ function getRandomNotFoodMessage() {
 
 // Analysis
 async function handleAnalyze() {
-    const searchTerm = foodSearch.value.trim();
-
-    if (!searchTerm && !uploadedFile) {
-        shakeElement(document.querySelector('.omnibox-wrapper'));
+    if (!uploadedFile) {
+        shakeElement(document.querySelector('.upload-card'));
         return;
     }
 
     showLoadingSection();
 
-    // Simulate analysis time
-    await simulateLoading();
+    // Start loading animation and API request concurrently
+    const loadingPromise = simulateLoading();
+    let foodData = null;
 
-    // Check if it's a non-food item first
-    if (isNotFood(searchTerm)) {
-        displayNotFoodError(searchTerm);
+    try {
+        let base64Image = null;
+        if (uploadedFile) {
+            // Send the full data URI as required by chat completions API
+            base64Image = previewImg.src;
+        }
+
+        const prompt = `Analyze the given food item based on ICMR-NIN 2024 Recommendations. 
+You are an expert Indian nutritionist. Identify the food in the uploaded image. Check if it is a valid food item or not.
+If the image is NOT food, return the following exactly: {"isFood": false}
+Otherwise, return the output STRICTLY as a JSON object with the following structure:
+{
+    "isFood": true,
+    "name": "Detected Food Name (e.g. Samosa, Dal Makhani)",
+    "portion": "Estimated portion size from image (e.g. 150g, 2 pieces)",
+    "summary": "Brief description of the food and its ingredients...",
+    "nutrition": {
+        "calories": 300, 
+        "protein": 12, 
+        "carbs": 40, 
+        "fat": 10, 
+        "fiber": 4, 
+        "vitamins": "Vitamin A, Calcium"
+    },
+    "healthStatus": "GOOD" | "WARNING" | "BAD",
+    "healthReason": "Why did it get this classification (based on ICMR)...",
+    "specificWarnings": [ "High saturated fat", "High sodium content", "Low fiber" ],
+    "recommendations": [ "Recommendation 1", "Recommendation 2" ]
+}`;
+
+        const messages = [];
+        if (base64Image) {
+            messages.push({
+                role: "user",
+                content: [
+                    { type: "text", text: prompt },
+                    { type: "image_url", image_url: { url: base64Image } }
+                ]
+            });
+        } else {
+            messages.push({
+                role: "user",
+                content: prompt
+            });
+        }
+
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer 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",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "google/gemma-3-27b-it:free",
+                messages: messages
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API returned status ${response.status}`);
+        }
+
+        const data = await response.json();
+        let content = data.choices[0].message.content;
+
+        // Remove markdown formatting if present
+        content = content.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+        foodData = JSON.parse(content);
+
+    } catch (e) {
+        console.error("API Error:", e);
+        // If API fails completely, fallback to generic error.
+        await loadingPromise;
+        displayNotFoodError("Unknown Error");
         return;
     }
 
-    // Find food in database
-    const foodData = findFood(searchTerm || 'butter chicken');
+    await loadingPromise;
 
-    if (foodData) {
+    if (foodData && foodData.isFood === false) {
+        displayNotFoodError("Image");
+    } else if (foodData) {
         displayResults(foodData);
     } else {
-        displayNotFound(searchTerm);
+        displayNotFoodError("Unknown");
     }
 }
 
@@ -200,132 +270,85 @@ function simulateLoading() {
 
 // Display Results
 function displayResults(food) {
-    // Set food name
-    document.getElementById('foodName').textContent = food.name;
+    try {
+        // Set food name and badge
+        document.getElementById('foodName').textContent = food?.name || 'Unknown Food';
 
-    // Set summary
-    document.getElementById('foodSummary').textContent = food.summary;
+        const badge = document.getElementById('healthBadge');
+        badge.textContent = `STATUS: ${food?.healthStatus || 'UNKNOWN'}`;
+        badge.className = 'health-badge'; // reset class
 
-    // Set nutrition quick view
-    const nutritionQuick = document.getElementById('nutritionQuick');
-    nutritionQuick.innerHTML = generateNutritionQuick(food.nutrition);
+        if (food?.healthStatus === 'GOOD') {
+            badge.classList.add('good');
+            badge.textContent = '🟢 Good';
+        } else if (food?.healthStatus === 'WARNING') {
+            badge.classList.add('warning');
+            badge.textContent = '🟡 Warning';
+        } else {
+            badge.classList.add('bad');
+            badge.textContent = '🔴 Bad';
+        }
 
-    // Populate tabs
-    populateList('.good-list', food.good, '✅');
-    populateList('.bad-list', food.bad, '⚠️');
-    populateList('.warnings-list', food.warnings, '🚨');
-    populateList('.alternatives-list', food.alternatives, '🥗');
+        // Set summary
+        document.getElementById('foodSummary').innerHTML = `<strong>Portion Size:</strong> ${food?.portion || 'Unknown'}<br><br>${food?.summary || 'No summary provided.'}`;
 
-    // Populate tips
-    const tipsList = document.getElementById('consumptionTips');
-    tipsList.innerHTML = food.tips.map(tip => `<li>${tip}</li>`).join('');
+        // Set nutrition grid
+        const nutritionGrid = document.getElementById('nutritionGrid');
+        nutritionGrid.innerHTML = generateNutritionGrid(food?.nutrition || {});
 
-    // Reset to first tab
-    switchTab('good');
+        // Set health reasons
+        document.getElementById('healthReason').textContent = food?.healthReason || 'No specific reasons provided.';
 
-    showResultsSection();
+        // Set warnings list
+        const warnList = document.getElementById('warningsList');
+        if (food?.specificWarnings && Array.isArray(food.specificWarnings) && food.specificWarnings.length > 0) {
+            document.getElementById('warningsSection').style.display = 'block';
+            warnList.innerHTML = food.specificWarnings.map(warn => `
+                <li>
+                    <span class="icon">⚠️</span>
+                    <span class="text">${warn}</span>
+                </li>
+            `).join('');
+        } else {
+            document.getElementById('warningsSection').style.display = 'none';
+        }
+
+        // Set recommendations list
+        const recList = document.getElementById('recommendationList');
+        if (food?.recommendations && Array.isArray(food.recommendations) && food.recommendations.length > 0) {
+            recList.innerHTML = food.recommendations.map(rec => `
+                <li>
+                    <span class="icon">✔</span>
+                    <span class="text">${rec}</span>
+                </li>
+            `).join('');
+        } else {
+            recList.innerHTML = `<li><span class="text">No specific recommendations provided.</span></li>`;
+        }
+
+        showResultsSection();
+    } catch (e) {
+        console.error("Display rendering error:", e);
+        displayNotFoodError("Rendering Error");
+    }
 }
 
-function generateNutritionQuick(nutrition) {
+function generateNutritionGrid(nutrition = {}) {
     const items = [
-        { label: 'Calories', value: nutrition.calories, unit: 'kcal', level: 'neutral' },
-        { label: 'Protein', value: nutrition.protein, unit: 'g', level: getProteinLevel(nutrition.protein) },
-        { label: 'Sugar', value: nutrition.sugar, unit: 'g', level: getSugarLevel(nutrition.sugar) },
-        { label: 'Fat', value: nutrition.fat, unit: 'g', level: getFatLevel(nutrition.fat) }
+        { label: 'Calories', value: nutrition?.calories || 0, unit: 'kcal' },
+        { label: 'Protein', value: nutrition?.protein || 0, unit: 'g' },
+        { label: 'Carbs', value: nutrition?.carbs || 0, unit: 'g' },
+        { label: 'Fat', value: nutrition?.fat || 0, unit: 'g' },
+        { label: 'Fiber', value: nutrition?.fiber || 0, unit: 'g' },
+        { label: 'Vitamins', value: nutrition?.vitamins || 'None marked', unit: '' }
     ];
 
     return items.map(item => `
-        <div class="nutrition-item ${item.level}">
+        <div class="nutrition-item">
             <span class="label">${item.label}</span>
             <span class="value">${item.value}${item.unit}</span>
         </div>
     `).join('');
-}
-
-function getProteinLevel(protein) {
-    if (protein >= 15) return 'low'; // Green for high protein
-    if (protein >= 8) return 'medium';
-    return 'high'; // Red for low protein
-}
-
-function getSugarLevel(sugar) {
-    if (sugar > 20) return 'high';
-    if (sugar > 10) return 'medium';
-    return 'low';
-}
-
-function getFatLevel(fat) {
-    if (fat > 25) return 'high';
-    if (fat > 15) return 'medium';
-    return 'low';
-}
-
-function populateList(selector, items, icon) {
-    const list = document.querySelector(selector);
-    if (!items || items.length === 0) {
-        list.innerHTML = `<li><span class="icon">ℹ️</span><span class="text">No items to display</span></li>`;
-        return;
-    }
-
-    list.innerHTML = items.map(item => `
-        <li>
-            <span class="icon">${icon}</span>
-            <span class="text">
-                <strong>${item.title}</strong>
-                <span>${item.desc}</span>
-            </span>
-        </li>
-    `).join('');
-}
-
-function displayNotFound(searchTerm) {
-    // Create a generic response for unknown foods
-    const genericFood = {
-        name: searchTerm || 'Unknown Food',
-        summary: `We don't have specific data for "${searchTerm}" in our database yet. However, here are general ICMR guidelines to keep in mind when consuming any food.`,
-        nutrition: {
-            calories: '?',
-            protein: '?',
-            sugar: '?',
-            fat: '?'
-        },
-        good: [
-            { title: 'General Advice', desc: 'Look for foods high in protein, fiber, and essential vitamins' },
-            { title: 'Whole Foods', desc: 'Prefer whole grains, fresh vegetables, and unprocessed items' }
-        ],
-        bad: [
-            { title: 'Avoid Excess Sugar', desc: 'ICMR recommends less than 25g added sugar per day' },
-            { title: 'Limit Salt', desc: 'Keep salt intake below 5g per day' }
-        ],
-        warnings: [
-            { title: 'Check Labels', desc: 'Always read nutritional labels on packaged foods' },
-            { title: 'Portion Control', desc: 'Be mindful of serving sizes, especially for calorie-dense foods' }
-        ],
-        alternatives: [
-            { title: 'Traditional Options', desc: 'Consider traditional Indian foods like dals, roti, and fresh vegetables' },
-            { title: 'Home Cooking', desc: 'Homemade meals let you control oil, salt, and sugar' }
-        ],
-        tips: [
-            'Try our sample foods to see detailed analysis',
-            'Upload a clear photo of the food or nutrition label',
-            'Type the exact food name for better results'
-        ]
-    };
-
-    displayResults(genericFood);
-}
-
-// Tab Switching
-function switchTab(tabId) {
-    // Update tab buttons
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.tab === tabId);
-    });
-
-    // Update tab panes
-    document.querySelectorAll('.tab-pane').forEach(pane => {
-        pane.classList.toggle('active', pane.id === tabId);
-    });
 }
 
 // Display Not Food Error
@@ -351,7 +374,6 @@ function showUploadSection() {
     loadingSection.hidden = true;
     resultsSection.hidden = true;
     notFoodSection.hidden = true;
-    foodSearch.value = '';
     removeImage();
 }
 
@@ -367,9 +389,6 @@ function showResultsSection() {
     loadingSection.hidden = true;
     resultsSection.hidden = false;
     notFoodSection.hidden = true;
-
-    // Scroll to top of results
-    resultsSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 function showNotFoodSection() {
@@ -377,22 +396,12 @@ function showNotFoodSection() {
     loadingSection.hidden = true;
     resultsSection.hidden = true;
     notFoodSection.hidden = false;
-
-    // Scroll to top
-    notFoodSection.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Animations
 function shakeElement(element) {
     element.style.animation = 'shake 0.5s';
     setTimeout(() => element.style.animation = '', 500);
-}
-
-function animateFloatingIcons() {
-    const icons = document.querySelectorAll('.float-icon');
-    icons.forEach((icon, index) => {
-        icon.style.animationDuration = `${15 + index * 3}s`;
-    });
 }
 
 // Add shake animation dynamically

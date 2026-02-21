@@ -18,13 +18,6 @@
     <div class="app-container">
         <!-- Animated Background -->
         <div class="bg-gradient"></div>
-        <div class="floating-elements">
-            <span class="float-icon">🍛</span>
-            <span class="float-icon">🥗</span>
-            <span class="float-icon">🍲</span>
-            <span class="float-icon">🥭</span>
-            <span class="float-icon">🌶️</span>
-        </div>
 
         <!-- Header -->
         <header class="header">
@@ -38,48 +31,27 @@
         <!-- Main Content -->
         <main class="main-content">
             <!-- Main Input Section -->
-            <section class="c-section" id="uploadSection">
-                <div class="omnibox-container">
-                    <div class="omnibox-wrapper">
-                        <div class="omnibox">
-                            <button class="camera-btn" id="cameraBtn" title="Upload Photo" aria-label="Upload Photo">
-                                <span class="camera-icon">📷</span>
-                            </button>
-                            <input type="text" id="foodSearch"
-                                placeholder="Type food name or click camera to upload...">
-                            <input type="file" id="fileInput" accept="image/*" hidden>
-                        </div>
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📸</div>
+                        <h2>Analyze Your Food</h2>
+                        <p>Upload a photo of your meal to get ICMR-aligned health insights</p>
+                        <p class="upload-hint">Supports JPG, PNG (Max 10MB)</p>
+                        <input type="file" id="fileInput" accept="image/*" hidden>
                     </div>
 
-                    <!-- Image Preview (Appears below omnibox) -->
-                    <div class="mini-preview" id="imagePreview" hidden>
-                        <div class="preview-card">
-                            <img id="previewImg" src="" alt="Food preview">
-                            <div class="preview-info">
-                                <span class="file-name" id="fileName">image.jpg</span>
-                                <button class="remove-btn-mini" id="removeBtn">Remove</button>
-                            </div>
-                        </div>
+                    <!-- Image Preview -->
+                    <div class="image-preview" id="imagePreview" hidden>
+                        <img id="previewImg" src="" alt="Food preview">
+                        <button class="remove-btn" id="removeBtn" aria-label="Remove image">✕</button>
                     </div>
 
                     <!-- Main Action Button -->
                     <div class="action-area">
-                        <button class="analyze-btn" id="analyzeBtn">
+                        <button class="analyze-btn" id="analyzeBtn" disabled>
                             <span class="btn-icon">✨</span> Analyze Food
                         </button>
-                    </div>
-                </div>
-
-                <!-- Sample Foods -->
-                <div class="sample-foods">
-                    <p class="sample-label">Or try these examples:</p>
-                    <div class="sample-chips">
-                        <button class="chip" data-food="Butter Chicken">🍗 Butter Chicken</button>
-                        <button class="chip" data-food="Boost Health Drink">🥤 Boost Drink</button>
-                        <button class="chip" data-food="Masala Dosa">🥞 Masala Dosa</button>
-                        <button class="chip" data-food="Sweet Lassi">🥛 Sweet Lassi</button>
-                        <button class="chip" data-food="Maggi Noodles">🍜 Maggi Noodles</button>
-                        <button class="chip" data-food="Gulab Jamun">🍩 Gulab Jamun</button>
                     </div>
                 </div>
             </section>
@@ -121,50 +93,49 @@
             <section class="results-section" id="resultsSection" hidden>
                 <div class="results-header">
                     <button class="back-btn" id="backBtn">← Analyze Another</button>
-                    <h2 id="foodName">Food Name</h2>
-                </div>
-
-                <!-- Food Summary Card -->
-                <div class="summary-card" id="summaryCard">
-                    <div class="summary-header">
-                        <span class="summary-icon">📊</span>
-                        <h3>Summary</h3>
-                    </div>
-                    <p id="foodSummary">Loading summary...</p>
-                    <div class="nutrition-quick" id="nutritionQuick"></div>
-                </div>
-
-                <!-- Analysis Tabs -->
-                <div class="analysis-tabs">
-                    <button class="tab active" data-tab="good">✅ Good</button>
-                    <button class="tab" data-tab="bad">⚠️ Bad</button>
-                    <button class="tab" data-tab="warnings">🚨 Warnings</button>
-                    <button class="tab" data-tab="alternatives">🥗 Alternatives</button>
-                </div>
-
-                <!-- Tab Content -->
-                <div class="tab-content">
-                    <div class="tab-pane active" id="good">
-                        <ul class="analysis-list good-list"></ul>
-                    </div>
-                    <div class="tab-pane" id="bad">
-                        <ul class="analysis-list bad-list"></ul>
-                    </div>
-                    <div class="tab-pane" id="warnings">
-                        <ul class="analysis-list warnings-list"></ul>
-                    </div>
-                    <div class="tab-pane" id="alternatives">
-                        <ul class="analysis-list alternatives-list"></ul>
+                    <div class="food-title-group">
+                        <h2 id="foodName">Food Name</h2>
+                        <span class="health-badge" id="healthBadge">🟢 Good</span>
                     </div>
                 </div>
 
-                <!-- Consumption Tips -->
-                <div class="tips-card" id="tipsCard">
-                    <div class="tips-header">
-                        <span class="tips-icon">💡</span>
-                        <h3>Ways to Consume</h3>
+                <div class="results-grid">
+                    <!-- Food Summary Card -->
+                    <div class="summary-card" id="summaryCard">
+                        <div class="summary-header">
+                            <span class="summary-icon">📊</span>
+                            <h3>Analysis Summary</h3>
+                        </div>
+                        <p id="foodSummary">Loading summary...</p>
+
+                        <div class="nutrition-grid" id="nutritionGrid">
+                            <!-- Populated by JS -->
+                        </div>
                     </div>
-                    <ul id="consumptionTips"></ul>
+
+                    <!-- Recommendation Card -->
+                    <div class="recommendation-card" id="recommendationCard">
+                        <div class="rec-header">
+                            <span class="rec-icon">📋</span>
+                            <h3>Health Evaluation</h3>
+                        </div>
+                        <div class="rec-content">
+                            <h4>Why:</h4>
+                            <p id="healthReason">Loading reason...</p>
+
+                            <div id="warningsSection" style="display: none; margin-top: 1rem;">
+                                <h4>Specific Warnings:</h4>
+                                <ul id="warningsList" class="warning-list">
+                                    <!-- Populated by JS -->
+                                </ul>
+                            </div>
+
+                            <h4>Recommendations:</h4>
+                            <ul id="recommendationList" class="recommendation-list">
+                                <!-- Populated by JS -->
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- ICMR Reference -->
@@ -183,7 +154,7 @@
         </footer>
     </div>
 
-    <script src="icmr-data.js"></script>
+    <!-- Removed icmr-data.js dependency -->
     <script src="app.js"></script>
 </body>
 
